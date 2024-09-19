@@ -1,101 +1,204 @@
-import Image from "next/image";
+"use client"
 
-export default function Home() {
+import { useState, useMemo } from "react"
+import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import Footer from "@/components/ui/footer"
+
+
+
+// Helper function to format numbers with commas and two decimal places
+const formatNumber = (num: number) => {
+  return new Intl.NumberFormat('en-IN', { 
+    style: 'currency', 
+    currency: 'INR',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2 
+  }).format(num);
+}
+
+export default function SIPCalculator() {
+  const [investmentType, setInvestmentType] = useState("sip")
+  const [amount, setAmount] = useState("1000")
+  const [years, setYears] = useState("5")
+  const [returnRate, setReturnRate] = useState("12")
+  const [result, setResult] = useState(null)
+
+  const calculateReturns = () => {
+    const principal = parseFloat(amount)
+    const time = parseInt(years)
+    const rateOfReturn = parseFloat(returnRate) / 100 // Convert percentage to decimal
+
+    if (isNaN(principal) || isNaN(time) || isNaN(rateOfReturn)) {
+      alert("Please enter valid numbers for all fields.")
+      return
+    }
+
+    let yearlyData = []
+    let totalAmount, totalInvestment, totalReturns
+
+    if (investmentType === "sip") {
+      // SIP calculation
+      const monthlyRate = rateOfReturn / 12
+      let runningInvestment = 0
+      let runningReturns = 0
+
+      for (let year = 1; year <= time; year++) {
+        runningInvestment = principal * year * 12
+        totalAmount = principal * ((Math.pow(1 + monthlyRate, year * 12) - 1) / monthlyRate) * (1 + monthlyRate)
+        runningReturns = totalAmount - runningInvestment
+
+        yearlyData.push({
+          year,
+          investment: runningInvestment,
+          returns: runningReturns,
+          totalValue: totalAmount
+        })
+      }
+    } else {
+      // Lump sum calculation
+      for (let year = 1; year <= time; year++) {
+        totalAmount = principal * Math.pow(1 + rateOfReturn, year)
+        totalReturns = totalAmount - principal
+
+        yearlyData.push({
+          year,
+          investment: principal,
+          returns: totalReturns,
+          totalValue: totalAmount
+        })
+      }
+    }
+
+    setResult(yearlyData)
+  }
+
+  const finalResult = useMemo(() => {
+    if (!result) return null
+    const lastYear = result[result.length - 1]
+    return {
+      totalInvestment: lastYear.investment,
+      totalReturns: lastYear.returns,
+      totalAmount: lastYear.totalValue
+    }
+  }, [result])
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+    <>
+      <Card className="w-full max-w-4xl mx-auto">
+      <CardHeader>
+        <CardTitle className="text-2xl font-bold">SIP Calculator</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="grid gap-6 mb-6">
+          <RadioGroup className="flex space-x-4" value={investmentType} onValueChange={setInvestmentType}>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="sip" id="sip" />
+              <Label htmlFor="sip">SIP</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="lumpsum" id="lumpsum" />
+              <Label htmlFor="lumpsum">One-time Investment</Label>
+            </div>
+          </RadioGroup>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <Label htmlFor="amount">
+                {investmentType === "sip" ? "Monthly SIP Amount" : "One-time Investment Amount"}
+              </Label>
+              <Input
+                id="amount"
+                type="number"
+                placeholder="Enter amount"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="years">Investment Period (Years)</Label>
+              <Select value={years} onValueChange={setYears}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select years" />
+                </SelectTrigger>
+                <SelectContent>
+                  {[1, 2, 3, 4, 5, 10, 15, 20, 25, 30].map((year) => (
+                    <SelectItem key={year} value={year.toString()}>
+                      {year} {year === 1 ? "year" : "years"}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="returnRate">Expected Annual Return Rate (%)</Label>
+              <Input
+                id="returnRate"
+                type="number"
+                placeholder="Enter expected return rate"
+                value={returnRate}
+                onChange={(e) => setReturnRate(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <Button className="w-full bg-black text-white z-40" onClick={calculateReturns}>Calculate Returns</Button>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+
+        {result && (
+          <div className="mt-6 space-y-6">
+            <div className="grid grid-cols-3 gap-4 text-center">
+              <div className="bg-blue-100 p-4 rounded-lg">
+                <h4 className="font-semibold text-blue-800">Total Investment</h4>
+                <p className="text-2xl font-bold text-blue-600">{formatNumber(finalResult.totalInvestment)}</p>
+              </div>
+              <div className="bg-green-100 p-4 rounded-lg">
+                <h4 className="font-semibold text-green-800">Total Returns</h4>
+                <p className="text-2xl font-bold text-green-600">{formatNumber(finalResult.totalReturns)}</p>
+              </div>
+              <div className="bg-purple-100 p-4 rounded-lg">
+                <h4 className="font-semibold text-purple-800">Total Amount</h4>
+                <p className="text-2xl font-bold text-purple-600">{formatNumber(finalResult.totalAmount)}</p>
+              </div>
+            </div>
+
+            <div className="h-[400px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={result}
+                  margin={{
+                    top: 20,
+                    right: 30,
+                    left: 20,
+                    bottom: 5,
+                  }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="year" />
+                  <YAxis tickFormatter={(value) => formatNumber(value).replace('₹', '')} />
+                  <Tooltip 
+                    formatter={(value, name) => [formatNumber(value), name]}
+                    labelFormatter={(label) => `Year ${label}`}
+                  />
+                  <Legend />
+                  <Bar dataKey="investment" stackId="a" fill="#3b82f6" name="Investment" />
+                  <Bar dataKey="returns" stackId="a" fill="#10b981" name="Returns" />
+                  <Line type="monotone" dataKey="totalValue" stroke="#8b5cf6" name="Total Value" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+    <Footer/>
+    </>
+  )
 }
