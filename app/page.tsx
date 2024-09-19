@@ -199,10 +199,18 @@ export default function SIPCalculator() {
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="year" />
                     <YAxis tickFormatter={(value) => formatNumber(value).replace('₹', '')} />
-                    <Tooltip 
+                    {/* <Tooltip 
                       formatter={(value, name) => [formatNumber(value), name]}
                       labelFormatter={(label) => `Year ${label}`}
+                    /> */}
+                    <Tooltip
+                      formatter={(value, name) => {
+                        const formattedValue = formatNumber(Number(value))
+                        return [formattedValue, name]
+                      }}
+                      labelFormatter={(label) => `Year ${label}`}
                     />
+
                     <Legend />
                     <Bar dataKey="investment" stackId="a" fill="#3b82f6" name="Investment" />
                     <Bar dataKey="returns" stackId="a" fill="#10b981" name="Returns" />
