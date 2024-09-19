@@ -164,7 +164,7 @@ export default function SIPCalculator() {
 
           {result && (
             <div className="mt-6 space-y-6">
-              <div className="grid grid-cols-3 gap-4 text-center">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                 <div className="bg-blue-100 p-4 rounded-lg">
                   <h4 className="font-semibold text-blue-800">Total Investment</h4>
                   <p className="text-2xl font-bold text-blue-600">
