@@ -39,8 +39,8 @@ export default function SIPCalculator() {
       return
     }
 
-    let yearlyData = []
-    let totalAmount, totalInvestment, totalReturns
+    const yearlyData = [];
+    let totalAmount, totalReturns
 
     if (investmentType === "sip") {
       // SIP calculation
